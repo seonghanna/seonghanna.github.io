@@ -23,7 +23,7 @@
         }
         .soccer-field {
             width: 300px;
-            height: 200px;
+            height: 300px;
             background-color: #4CAF50;
             position: relative;
             margin: 20px auto;
@@ -31,43 +31,35 @@
             overflow: hidden;
         }
         .goal {
-            width: 220px;
-            height: 80px;
-            border: 5px solid white;
-            border-bottom: none;
+            width: 250px;
+            height: 200px;
+            background-image: url('골대.png'); /* 골대 이미지를 사용 */
+            background-size: cover; /* 이미지를 요소에 맞게 조정 */
             position: absolute;
-            top: 0;
+            top: -30px; /* 이미지를 더 위로 올리기 위해 음수 값 사용 */
             left: 50%;
             transform: translateX(-50%);
+            background-repeat: no-repeat;
+            background-position: center;
         }
         .goal::before, .goal::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            width: 5px;
-            height: 40px;
-            background-color: white;
-        }
-        .goal::before {
-            left: 0;
-        }
-        .goal::after {
-            right: 0;
+            display: none; /* 상단의 흰 선을 제거 */
         }
         .goalkeeper {
-            width: 40px;
-            height: 40px;
-            background-color: #FF0000;
+            width: 100px;
+            height: 100px;
+            background-image: url('도라에몽.png'); /* 골키퍼 이미지 사용 */
+            background-size: cover; /* 이미지를 요소에 맞게 조정 */
             position: absolute;
             top: 20px;
-            left: 130px;
+            left: 60px;
             transition: all 0.3s ease;
         }
         .ball {
-            width: 20px;
-            height: 20px;
-            background-color: #FFF;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            background-image: url('축구공.png'); /* 골키퍼 이미지 사용 */
+            background-size: cover;
             position: absolute;
             bottom: 20px;
             left: 140px;
@@ -103,6 +95,7 @@
 <body>
     <div class="game-container">
         <h1>축구 승부차기 게임</h1>
+        <h3>made by hanna</h3>
         <div id="inputContainer">
             <label for="playerCount">인원수를 입력하세요:</label>
             <input type="number" id="playerCount" min="1" max="10" value="5">
@@ -118,7 +111,7 @@
             <button onclick="shoot('left')" id="leftButton">왼쪽</button>
             <button onclick="shoot('center')" id="centerButton">가운데</button>
             <button onclick="shoot('right')" id="rightButton">오른쪽</button>
-            <button onclick="reset()" id="resetButton">다시 차기</button>
+            <button onclick="reset()" id="resetButton">새로 시작</button>
             <div id="result"></div>
         </div>
     </div>
@@ -126,13 +119,11 @@
     <script>
         let playerCount = 5;
         let currentPlayer = 0;
-        let blockedShot = false;
         let blockedPlayer = -1;
 
         function startGame() {
             playerCount = parseInt(document.getElementById('playerCount').value);
             currentPlayer = 0;
-            blockedShot = false;
             blockedPlayer = Math.floor(Math.random() * playerCount);
 
             document.getElementById('inputContainer').style.display = 'none';
@@ -154,23 +145,22 @@
             // 공의 움직임
             switch(direction) {
                 case 'left':
-                    ballElement.style.left = '50px';
-                    ballElement.style.bottom = '150px';
+                    ballElement.style.left = '80px';
+                    ballElement.style.bottom = '220px';
                     break;
                 case 'center':
                     ballElement.style.left = '140px';
-                    ballElement.style.bottom = '150px';
+                    ballElement.style.bottom = '220px';
                     break;
                 case 'right':
-                    ballElement.style.left = '230px';
-                    ballElement.style.bottom = '150px';
+                    ballElement.style.left = '200px';
+                    ballElement.style.bottom = '220px';
                     break;
             }
 
             let goalkeeper;
             if (currentPlayer === blockedPlayer) {
                 goalkeeper = direction; // 골키퍼가 막도록 설정
-                blockedShot = true;
             } else {
                 goalkeeper = directions[Math.floor(Math.random() * 3)];
             }
@@ -181,37 +171,52 @@
                     goalkeeperElement.style.left = '50px';
                     break;
                 case 'center':
-                    goalkeeperElement.style.left = '130px';
+                    goalkeeperElement.style.left = '110px';
                     break;
                 case 'right':
-                    goalkeeperElement.style.left = '210px';
+                    goalkeeperElement.style.left = '160px';
                     break;
             }
 
+            // 결과 처리
             if (direction === goalkeeper) {
-                resultElement.textContent = `아쉽습니다! 골키퍼가 ${getKoreanDirection(direction)}으로 움직여 막았습니다.`;
-            } else {
-                resultElement.textContent = `골! 골키퍼는 ${getKoreanDirection(goalkeeper)}으로 움직였지만, 당신은 ${getKoreanDirection(direction)}으로 슈팅했습니다.`;
-            }
-
-            currentPlayer++;
-            if (currentPlayer >= playerCount) {
+                resultElement.textContent = `떼잉~~ 막혔습니다 ~ㅋ`;
                 document.getElementById('resetButton').style.display = 'inline-block';
+                hideShootButtons();
             } else {
-                // 다음 슈팅을 위해 버튼 활성화
-                document.getElementById('leftButton').disabled = false;
-                document.getElementById('centerButton').disabled = false;
-                document.getElementById('rightButton').disabled = false;
-                resultElement.textContent += ` 다음 선수 차례입니다.`;
+                resultElement.textContent = `골!!!!!`;
+                proceedToNextPlayer();
             }
         }
 
-        function getKoreanDirection(direction) {
-            switch(direction) {
-                case 'left': return '왼쪽';
-                case 'center': return '가운데';
-                case 'right': return '오른쪽';
-            }
+        function hideShootButtons() {
+            // 슈팅 버튼들을 숨기기
+            document.getElementById('leftButton').style.display = 'none';
+            document.getElementById('centerButton').style.display = 'none';
+            document.getElementById('rightButton').style.display = 'none';
+        }
+
+        function showShootButtons() {
+            // 슈팅 버튼들을 다시 표시
+            document.getElementById('leftButton').style.display = 'inline-block';
+            document.getElementById('centerButton').style.display = 'inline-block';
+            document.getElementById('rightButton').style.display = 'inline-block';
+        }
+
+        function proceedToNextPlayer() {
+            setTimeout(() => {
+                resetBallAndGoalkeeper();
+                currentPlayer++;
+
+                if (currentPlayer < playerCount) {
+                    document.getElementById('leftButton').disabled = false;
+                    document.getElementById('centerButton').disabled = false;
+                    document.getElementById('rightButton').disabled = false;
+                    document.getElementById('result').textContent = ` 다음 선수 차례입니다.`;
+                } else {
+                    document.getElementById('resetButton').style.display = 'inline-block';
+                }
+            }, 1000); // 1초 후에 공이 원래 자리로 돌아감
         }
 
         function reset() {
@@ -225,12 +230,13 @@
             // 결과 텍스트 초기화
             document.getElementById('result').textContent = '';
 
-            // 버튼 활성화
+            // 버튼 활성화 및 다시 표시
             document.getElementById('leftButton').disabled = false;
             document.getElementById('centerButton').disabled = false;
             document.getElementById('rightButton').disabled = false;
+            showShootButtons();
 
-            // 다시 차기 버튼 숨기기
+            // 새로 시작 버튼 숨기기
             document.getElementById('resetButton').style.display = 'none';
         }
 
@@ -239,8 +245,8 @@
             const goalkeeperElement = document.getElementById('goalkeeper');
 
             ballElement.style.left = '140px';
-            ballElement.style.bottom = '20px';
-            goalkeeperElement.style.left = '130px';
+            ballElement.style.bottom = '60px';
+            goalkeeperElement.style.left = '110px';
         }
     </script>
 </body>

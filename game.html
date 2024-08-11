@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>축구 승부차기 게임</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        h5 {
+            font-size: 1em;
+            margin-bottom: 20px;
+            color: #666;
+        }
+        button {
+            margin-top: 10px;
+            padding: 15px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .soccer-field {
+            width: 300px;
+            height: 300px;
+            background-color: #4CAF50;
+            position: relative;
+            margin: 20px auto;
+            border: 2px solid white;
+            overflow: hidden;
+            border-radius: 15px;
+        }
+        .goal {
+            width: 250px;
+            height: 200px;
+            background-image: url('골대.png');
+            background-size: cover;
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        .goalkeeper {
+            width: 100px;
+            height: 100px;
+            background-image: url('도라에몽.png');
+            background-size: cover;
+            position: absolute;
+            top: 20px;
+            left: 60px;
+            transition: all 0.3s ease;
+        }
+        .ball {
+            width: 40px;
+            height: 40px;
+            background-image: url('축구공.png');
+            background-size: cover;
+            position: absolute;
+            bottom: 20px;
+            left: 140px;
+            transition: all 0.3s ease;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #resetButton {
+            display: none;
+            background-color: #f44336;
+        }
+        #resetButton:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>축구 승부차기 게임</h5>
+        <h5 id="playerCountDisplay">참가자: 0명</h5>
+        <div id="gameContainer">
+            <div class="soccer-field">
+                <div class="goal"></div>
+                <div class="goalkeeper" id="goalkeeper"></div>
+                <div class="ball" id="ball"></div>
+            </div>
+            <p>방향을 골라 골을 넣으세요!</p>
+            <button onclick="shoot('left')" id="leftButton">왼쪽</button>
+            <button onclick="shoot('center')" id="centerButton">가운데</button>
+            <button onclick="shoot('right')" id="rightButton">오른쪽</button>
+            <button onclick="reset()" id="resetButton">새로 시작</button>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        let playerCount;
+        let currentPlayer = 0;
+        let blockedPlayers = [];
+        let isSecondRound = false;
+
+        window.onload = function() {
+            // URL에서 참가 인원 수를 받아옴
+            const urlParams = new URLSearchParams(window.location.search);
+            playerCount = parseInt(urlParams.get('players'));
+
+            // 참가자 수를 화면에 표시
+            const playerCountDisplay = document.getElementById('playerCountDisplay');
+            playerCountDisplay.textContent = `참가자 수: ${playerCount}명`;
+
+            startGame();  // 게임 시작
+        };
+
+        function startGame() {
+            currentPlayer = 0;
+            blockedPlayers = [];
+        
+            // 참가 인원에 따른 막힐 사람 수 결정
+            let maxBlockedPlayers;
+            if (playerCount <= 5) {
+                maxBlockedPlayers = Math.floor(Math.random() * 2) + 1; // 1~2명 막힘
+            } else if (playerCount <= 10) {
+                maxBlockedPlayers = Math.floor(Math.random() * 3) + 1; // 1~3명 막힘
+            } else {
+                maxBlockedPlayers = Math.floor(Math.random() * 3) + 2; // 2~4명 막힘
+            }
+        
+            // 랜덤하게 통과할 사람 선택
+            const possiblePlayers = Array.from({ length: playerCount }, (_, i) => i);
+            const passersCount = playerCount - maxBlockedPlayers;
+            const passers = [];
+        
+            while (passers.length < passersCount) {
+                const randomIndex = Math.floor(Math.random() * possiblePlayers.length);
+                passers.push(possiblePlayers[randomIndex]);
+                possiblePlayers.splice(randomIndex, 1);
+            }
+        
+            blockedPlayers = possiblePlayers; // 나머지 사람들은 모두 막힘
+            resetBallAndGoalkeeper();
+        }
+        
+        function shoot(direction) {
+            const directions = ['left', 'center', 'right'];
+            const resultElement = document.getElementById('result');
+            const goalkeeperElement = document.getElementById('goalkeeper');
+            const ballElement = document.getElementById('ball');
+
+            document.getElementById('leftButton').disabled = true;
+            document.getElementById('centerButton').disabled = true;
+            document.getElementById('rightButton').disabled = true;
+
+            switch(direction) {
+                case 'left':
+                    ballElement.style.left = '80px';
+                    ballElement.style.bottom = '220px';
+                    break;
+                case 'center':
+                    ballElement.style.left = '140px';
+                    ballElement.style.bottom = '220px';
+                    break;
+                case 'right':
+                    ballElement.style.left = '200px';
+                    ballElement.style.bottom = '220px';
+                    break;
+            }
+
+            let goalkeeper;
+            if (blockedPlayers.includes(currentPlayer)) {
+                goalkeeper = direction;
+            } else {
+                const randomDirections = directions.filter(dir => dir !== direction);
+                goalkeeper = randomDirections[Math.floor(Math.random() * randomDirections.length)];
+            }
+
+            switch(goalkeeper) {
+                case 'left':
+                    goalkeeperElement.style.left = '50px';
+                    break;
+                case 'center':
+                    goalkeeperElement.style.left = '110px';
+                    break;
+                case 'right':
+                    goalkeeperElement.style.left = '160px';
+                    break;
+            }
+
+            // 숫자를 한글로 변환하는 함수
+            function numberToKorean(num) {
+                const koreanNumbers = ['첫', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열한', '열둘', '열세', '열네', '열다섯', '열여섯', '열일곱', '열여덟', '열아홉', '스무'];
+                return koreanNumbers[num - 1];
+            }
+
+            const playerNumber = currentPlayer + 1;
+            const playerNumberKorean = numberToKorean(playerNumber);
+
+            if (direction === goalkeeper) {
+                resultElement.textContent = `${playerNumberKorean} 번째 선수의 슈팅: 떼잉~~ 막혔습니다 ~ㅋ`;
+            } else {
+                resultElement.textContent = `${playerNumberKorean} 번째 선수의 슈팅: 골!!!!!`;
+            }
+
+            proceedToNextPlayer();
+        }
+        
+        function start2RoundGame() {
+            currentPlayer = 0;
+        
+            // 막힐 사람 1명을 랜덤으로 선택
+            blockedPlayers = [Math.floor(Math.random() * playerCount)];
+        
+            const possiblePlayers = Array.from({ length: playerCount }, (_, i) => i);
+            possiblePlayers.splice(blockedPlayers[0], 1); // 막힐 사람을 제외한 나머지
+
+        
+            resetBallAndGoalkeeper();
+        
+            document.getElementById('leftButton').disabled = false;
+            document.getElementById('centerButton').disabled = false;
+            document.getElementById('rightButton').disabled = false;
+            showShootButtons();
+        }
+
+        function proceedToNextPlayer() {
+            setTimeout(() => {
+                resetBallAndGoalkeeper();
+                currentPlayer++;
+
+                if (currentPlayer < playerCount) {
+                    document.getElementById('leftButton').disabled = false;
+                    document.getElementById('centerButton').disabled = false;
+                    document.getElementById('rightButton').disabled = false;
+                    document.getElementById('result').textContent = ` 다음 선수 차례입니다.`;
+                    showShootButtons();
+                } else if (blockedPlayers.length > 1 && !isSecondRound) {
+                    // 2차전 시작
+                    isSecondRound = true;
+                    playerCount = blockedPlayers.length;
+                    document.getElementById('result').textContent = `${blockedPlayers.map(num => num + 1).join(', ')}번째 선수들끼리 2차전 시작!`;
+                    start2RoundGame(); // 2차전 시작 함수 호출
+                } else {
+                    document.getElementById('result').textContent = ` 게임이 끝났습니다.`;
+                    document.getElementById('resetButton').style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        function reset() {
+            /*resetBallAndGoalkeeper();
+            document.getElementById('result').textContent = '';
+
+            document.getElementById('leftButton').disabled = false;
+            document.getElementById('centerButton').disabled = false;
+            document.getElementById('rightButton').disabled = false;
+            showShootButtons();
+
+            document.getElementById('resetButton').style.display = 'none';
+            isSecondRound = false;
+            startGame();*/
+            window.location.href = 'index.html';
+        }
+
+        function resetBallAndGoalkeeper() {
+            const ballElement = document.getElementById('ball');
+            const goalkeeperElement = document.getElementById('goalkeeper');
+
+            ballElement.style.left = '140px';
+            ballElement.style.bottom = '60px';
+            goalkeeperElement.style.left = '110px';
+        }
+
+        function hideShootButtons() {
+            document.getElementById('leftButton').style.display = 'none';
+            document.getElementById('centerButton').style.display = 'none';
+            document.getElementById('rightButton').style.display = 'none';
+        }
+
+        function showShootButtons() {
+            document.getElementById('leftButton').style.display = 'inline-block';
+            document.getElementById('centerButton').style.display = 'inline-block';
+            document.getElementById('rightButton').style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html>

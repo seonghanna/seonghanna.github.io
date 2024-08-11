@@ -14,59 +14,15 @@
             margin: 0;
             background-color: #f0f0f0;
         }
-        .game-container {
+        .intro-container {
             text-align: center;
             background-color: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .soccer-field {
-            width: 300px;
-            height: 300px;
-            background-color: #4CAF50;
-            position: relative;
-            margin: 20px auto;
-            border: 2px solid white;
-            overflow: hidden;
-        }
-        .goal {
-            width: 250px;
-            height: 200px;
-            background-image: url('골대.png'); /* 골대 이미지를 사용 */
-            background-size: cover; /* 이미지를 요소에 맞게 조정 */
-            position: absolute;
-            top: -30px; /* 이미지를 더 위로 올리기 위해 음수 값 사용 */
-            left: 50%;
-            transform: translateX(-50%);
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        .goal::before, .goal::after {
-            display: none; /* 상단의 흰 선을 제거 */
-        }
-        .goalkeeper {
-            width: 100px;
-            height: 100px;
-            background-image: url('도라에몽.png'); /* 골키퍼 이미지 사용 */
-            background-size: cover; /* 이미지를 요소에 맞게 조정 */
-            position: absolute;
-            top: 20px;
-            left: 60px;
-            transition: all 0.3s ease;
-        }
-        .ball {
-            width: 40px;
-            height: 40px;
-            background-image: url('축구공.png'); /* 골키퍼 이미지 사용 */
-            background-size: cover;
-            position: absolute;
-            bottom: 20px;
-            left: 140px;
-            transition: all 0.3s ease;
-        }
         button {
-            margin: 10px;
+            margin-top: 10px;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -79,175 +35,64 @@
         button:hover {
             background-color: #45a049;
         }
-        #result {
+        .game-rules {
             margin-top: 20px;
-            font-weight: bold;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center; /* 게임 룰을 가운데 정렬 */
         }
-        #resetButton {
-            display: none;
-            background-color: #f44336;
+        .contact-info {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #888;
         }
-        #resetButton:hover {
-            background-color: #da190b;
+        .player-input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        input[type="number"] {
+            width: 60px; /* 입력 박스의 너비를 키움 */
+            height: 50px;
+            font-size: 20px; /* 입력 텍스트 크기 조정 */
+            padding: 5px; /* 입력 박스의 안쪽 여백 조정 */
+            margin-left: 10px; /* 텍스트와의 간격 조정 */
+            border-radius: 5px; /* 둥근 모서리 추가 */
+            border: 1px solid #ccc; /* 테두리 색상 */
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h4 style="color: #cccccc;">made by hanna</h4>
+    <div class="intro-container">
         <h1>축구 승부차기 게임</h1>
         <h5>커피 쏘기 등 친구들과 내기할 때 사용해 주세요!</h5>
-        <div id="inputContainer">
-            <label for="playerCount">인원수를 입력하세요:</label>
-            <input type="number" id="playerCount" min="1" max="10" value="5">
-            <button onclick="startGame()">게임 시작</button>
+
+        <div class="game-rules">
+            <p><strong>< 게임 규칙 ></strong></p>
+            <p>최종 1명이 될 때까지 게임을 진행하면 돼요.</p>
+            <p>!?! 만약 2명 이상이 골을 넣지 못했다면 ?!!</p>
+            <p>못 넣은 사람들끼리 2차전 ㄱㄱ!</p>
         </div>
-        <div id="gameContainer" style="display:none;">
-            <div class="soccer-field">
-                <div class="goal"></div>
-                <div class="goalkeeper" id="goalkeeper"></div>
-                <div class="ball" id="ball"></div>
-            </div>
-            <p>방향을 골라 골을 넣으세요!</p>
-            <button onclick="shoot('left')" id="leftButton">왼쪽</button>
-            <button onclick="shoot('center')" id="centerButton">가운데</button>
-            <button onclick="shoot('right')" id="rightButton">오른쪽</button>
-            <button onclick="reset()" id="resetButton">새로 시작</button>
-            <div id="result"></div>
+
+        <div class="player-input-container">
+            <p>참가인원: <input type="number" id="playerCount" min="1" max="20" value="5"> 명</p>
+        </div>
+
+        <button onclick="enterGame()">게임 시작</button>
+
+        <div class="contact-info">
+            <p>행운을 빌어요 ✌︎ -᷅ ̫̈-᷄ ✌︎</p>
+            <p>문의사항은 aj50252@naver.com 으로 언제든 연락주세요</p>
         </div>
     </div>
 
     <script>
-        let playerCount = 5;
-        let currentPlayer = 0;
-        let blockedPlayer = -1;
-
-        function startGame() {
-            playerCount = parseInt(document.getElementById('playerCount').value);
-            currentPlayer = 0;
-            blockedPlayer = Math.floor(Math.random() * playerCount);
-
-            document.getElementById('inputContainer').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            resetBallAndGoalkeeper();
-        }
-
-        function shoot(direction) {
-            const directions = ['left', 'center', 'right'];
-            const resultElement = document.getElementById('result');
-            const goalkeeperElement = document.getElementById('goalkeeper');
-            const ballElement = document.getElementById('ball');
-
-            // 버튼 비활성화
-            document.getElementById('leftButton').disabled = true;
-            document.getElementById('centerButton').disabled = true;
-            document.getElementById('rightButton').disabled = true;
-
-            // 공의 움직임
-            switch(direction) {
-                case 'left':
-                    ballElement.style.left = '80px';
-                    ballElement.style.bottom = '220px';
-                    break;
-                case 'center':
-                    ballElement.style.left = '140px';
-                    ballElement.style.bottom = '220px';
-                    break;
-                case 'right':
-                    ballElement.style.left = '200px';
-                    ballElement.style.bottom = '220px';
-                    break;
-            }
-
-            let goalkeeper;
-            if (currentPlayer === blockedPlayer) {
-                goalkeeper = direction; // 골키퍼가 막도록 설정
-            } else {
-                goalkeeper = directions[Math.floor(Math.random() * 3)];
-            }
-
-            // 골키퍼의 움직임
-            switch(goalkeeper) {
-                case 'left':
-                    goalkeeperElement.style.left = '50px';
-                    break;
-                case 'center':
-                    goalkeeperElement.style.left = '110px';
-                    break;
-                case 'right':
-                    goalkeeperElement.style.left = '160px';
-                    break;
-            }
-
-            // 결과 처리
-            if (direction === goalkeeper) {
-                resultElement.textContent = `떼잉~~ 막혔습니다 ~ㅋ`;
-                document.getElementById('resetButton').style.display = 'inline-block';
-                hideShootButtons();
-            } else {
-                resultElement.textContent = `골!!!!!`;
-                proceedToNextPlayer();
-            }
-        }
-
-        function hideShootButtons() {
-            // 슈팅 버튼들을 숨기기
-            document.getElementById('leftButton').style.display = 'none';
-            document.getElementById('centerButton').style.display = 'none';
-            document.getElementById('rightButton').style.display = 'none';
-        }
-
-        function showShootButtons() {
-            // 슈팅 버튼들을 다시 표시
-            document.getElementById('leftButton').style.display = 'inline-block';
-            document.getElementById('centerButton').style.display = 'inline-block';
-            document.getElementById('rightButton').style.display = 'inline-block';
-        }
-
-        function proceedToNextPlayer() {
-            setTimeout(() => {
-                resetBallAndGoalkeeper();
-                currentPlayer++;
-
-                if (currentPlayer < playerCount) {
-                    document.getElementById('leftButton').disabled = false;
-                    document.getElementById('centerButton').disabled = false;
-                    document.getElementById('rightButton').disabled = false;
-                    document.getElementById('result').textContent = ` 다음 선수 차례입니다.`;
-                } else {
-                    document.getElementById('resetButton').style.display = 'inline-block';
-                }
-            }, 1000); // 1초 후에 공이 원래 자리로 돌아감
-        }
-
-        function reset() {
-            // 인원수 입력 화면을 다시 표시하고, 게임 화면 숨기기
-            document.getElementById('inputContainer').style.display = 'block';
-            document.getElementById('gameContainer').style.display = 'none';
-
-            // 공과 골키퍼 위치 초기화
-            resetBallAndGoalkeeper();
-
-            // 결과 텍스트 초기화
-            document.getElementById('result').textContent = '';
-
-            // 버튼 활성화 및 다시 표시
-            document.getElementById('leftButton').disabled = false;
-            document.getElementById('centerButton').disabled = false;
-            document.getElementById('rightButton').disabled = false;
-            showShootButtons();
-
-            // 새로 시작 버튼 숨기기
-            document.getElementById('resetButton').style.display = 'none';
-        }
-
-        function resetBallAndGoalkeeper() {
-            const ballElement = document.getElementById('ball');
-            const goalkeeperElement = document.getElementById('goalkeeper');
-
-            ballElement.style.left = '140px';
-            ballElement.style.bottom = '60px';
-            goalkeeperElement.style.left = '110px';
+        function enterGame() {
+            // 참가 인원 수를 game.html에 전달하기 위해 URL에 포함
+            const playerCount = document.getElementById('playerCount').value;
+            window.location.href = `game.html?players=${playerCount}`;
         }
     </script>
 </body>
